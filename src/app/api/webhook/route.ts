@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
-import { prisma } from "@/lib/prisma";
 import Stripe from "stripe";
 
 export async function POST(request: Request) {
@@ -28,55 +27,19 @@ export async function POST(request: Request) {
   switch (event.type) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
-      const userId = session.metadata?.userId;
-      const plan = session.metadata?.plan;
-
-      if (userId && plan) {
-        // 创建订阅记录
-        await prisma.subscription.create({
-          data: {
-            userId,
-            plan,
-            status: "active",
-            paymentId: session.subscription as string,
-          },
-        });
-      }
+      console.log("支付成功:", session.id);
       break;
     }
 
     case "customer.subscription.updated": {
       const subscription = event.data.object as Stripe.Subscription;
-      const userId = subscription.metadata?.userId;
-
-      if (userId) {
-        // 更新订阅状态
-        await prisma.subscription.updateMany({
-          where: {
-            userId,
-            paymentId: subscription.id,
-          },
-          data: {
-            status: subscription.status === "active" ? "active" : "expired",
-          },
-        });
-      }
+      console.log("订阅更新:", subscription.id);
       break;
     }
 
     case "customer.subscription.deleted": {
       const subscription = event.data.object as Stripe.Subscription;
-      const userId = subscription.metadata?.userId;
-
-      if (userId) {
-        // 删除订阅记录
-        await prisma.subscription.deleteMany({
-          where: {
-            userId,
-            paymentId: subscription.id,
-          },
-        });
-      }
+      console.log("订阅删除:", subscription.id);
       break;
     }
   }
