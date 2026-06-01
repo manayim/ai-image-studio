@@ -22,6 +22,15 @@ export async function POST(request: Request) {
       });
     }
 
+    // 如果没有配置 Stripe，返回模拟数据
+    if (!stripe) {
+      return NextResponse.json({
+        success: true,
+        message: "支付功能暂未配置",
+        url: null,
+      });
+    }
+
     // 创建 Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
