@@ -41,7 +41,7 @@ export async function generateImage(params: GenerateImageParams): Promise<Genera
       response_format: "url",
     });
 
-    return response.data.map((img, index) => ({
+    return (response.data || []).map((img, index) => ({
       id: `img_${Date.now()}_${index}`,
       url: img.url || "",
       revised_prompt: img.revised_prompt,
