@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { verifyPassword, generateToken } from "@/lib/auth";
+
+// 内存存储（简化版）
+const userStore: any[] = [];
 
 export async function POST(request: Request) {
   try {
     const { email, password } = await request.json();
 
-    // 验证输入
     if (!email || !password) {
       return NextResponse.json(
         { error: "请填写邮箱和密码" },
@@ -15,10 +16,7 @@ export async function POST(request: Request) {
     }
 
     // 查找用户
-    const user = await prisma.user.findUnique({
-      where: { email },
-    });
-
+    const user = userStore.find(u => u.email === email);
     if (!user) {
       return NextResponse.json(
         { error: "邮箱或密码错误" },

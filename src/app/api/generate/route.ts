@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { generateImage } from "@/lib/openai";
-import { prisma } from "@/lib/prisma";
+
+// 内存存储（简化版）
+const imageStore: any[] = [];
 
 export async function POST(request: Request) {
   try {
-    const { prompt, model = "dall-e-3", size = "1024x1024", quality = "standard", userId } = await request.json();
+    const { prompt, model = "dall-e-3", size = "1024x1024", quality = "standard" } = await request.json();
 
     if (!prompt) {
       return NextResponse.json(
@@ -16,27 +18,19 @@ export async function POST(request: Request) {
     // 调用 OpenAI 生成图像
     const images = await generateImage({
       prompt,
-      model: model as "dall-e-3" | "gpt-image-2",
+      model: model as "dall-e-3",
       size: size as "1024x1024" | "1792x1024" | "1024x1792",
       quality: quality as "standard" | "hd",
     });
 
-    // 保存到数据库
-    const savedImages = await Promise.all(
-      images.map(async (img) => {
-        return prisma.image.create({
-          data: {
-            userId: userId || null,
-            prompt,
-            revisedPrompt: img.revised_prompt,
-            url: img.url,
-            model,
-            size,
-            quality,
-          },
-        });
-      })
-    );
+    // 保存到内存
+    const savedImages = images.map((img) => ({
+      ...img,
+      prompt,
+      model,
+      createdAt: new Date().toISOString(),
+    }));
+    imageStore.push(...savedImages);
 
     return NextResponse.json({
       success: true,
@@ -45,7 +39,6 @@ export async function POST(request: Request) {
   } catch (error: any) {
     console.error("生成失败:", error);
     
-    // 处理特定错误
     if (error?.status === 429) {
       return NextResponse.json(
         { error: "请求过于频繁，请稍后重试" },

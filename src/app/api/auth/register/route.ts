@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { hashPassword, generateToken } from "@/lib/auth";
+
+// 内存存储（简化版）
+const userStore: any[] = [];
 
 export async function POST(request: Request) {
   try {
     const { email, password, name } = await request.json();
 
-    // 验证输入
     if (!email || !password) {
       return NextResponse.json(
         { error: "请填写邮箱和密码" },
@@ -22,10 +23,7 @@ export async function POST(request: Request) {
     }
 
     // 检查邮箱是否已存在
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    });
-
+    const existingUser = userStore.find(u => u.email === email);
     if (existingUser) {
       return NextResponse.json(
         { error: "该邮箱已被注册" },
@@ -35,25 +33,17 @@ export async function POST(request: Request) {
 
     // 创建用户
     const hashedPassword = await hashPassword(password);
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        name: name || email.split("@")[0],
-      },
-    });
+    const user = {
+      id: `user_${Date.now()}`,
+      email,
+      password: hashedPassword,
+      name: name || email.split("@")[0],
+      createdAt: new Date().toISOString(),
+    };
+    userStore.push(user);
 
     // 生成 token
     const token = generateToken(user.id);
-
-    // 创建免费订阅
-    await prisma.subscription.create({
-      data: {
-        userId: user.id,
-        plan: "free",
-        status: "active",
-      },
-    });
 
     return NextResponse.json({
       success: true,

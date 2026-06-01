@@ -4,13 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "postinstall": "prisma generate"
+    "lint": "next lint"
   },
   "dependencies": {
-    "@prisma/client": "^7.8.0",
     "@stripe/stripe-js": "^9.7.0",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
@@ -19,7 +17,6 @@
     "lucide-react": "^0.511.0",
     "next": "^16.2.6",
     "openai": "^6.39.1",
-    "prisma": "^7.8.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "stripe": "^22.2.0",
