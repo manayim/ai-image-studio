@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  password      String
+  avatar        String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // 关联
+  images        Image[]
+  subscriptions Subscription[]
+  
+  @@map("users")
+}
+
+model Image {
+  id            String    @id @default(cuid())
+  userId        String?
+  prompt        String
+  revisedPrompt String?
+  url           String
+  model         String
+  size          String
+  quality       String
+  createdAt     DateTime  @default(now())
+  
+  // 关联
+  user          User?     @relation(fields: [userId], references: [id])
+  
+  @@map("images")
+}
+
+model Subscription {
+  id            String    @id @default(cuid())
+  userId        String
+  plan          String    // "free", "basic", "pro", "enterprise"
+  status        String    // "active", "canceled", "expired"
+  startDate     DateTime  @default(now())
+  endDate       DateTime?
+  paymentId     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // 关联
+  user          User      @relation(fields: [userId], references: [id])
+  
+  @@map("subscriptions")
+}
